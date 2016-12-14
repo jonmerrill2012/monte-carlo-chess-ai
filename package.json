@@ -1,0 +1,16 @@
+{
+  "name": "MonteCarloChess",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jon Merrill",
+  "license": "ISC",
+  "dependencies": {
+    "chess.js": "^0.10.2",
+    "prompt": "^1.0.0"
+  }
+}

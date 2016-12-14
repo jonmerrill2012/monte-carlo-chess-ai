@@ -1,5 +1,3 @@
-var Chess = require('chess.js').Chess;
-
 var VALUES = {
   p: 1,
   n: 3,
@@ -8,10 +6,9 @@ var VALUES = {
   q: 9
 }
 
-
 // tallies the pieces as a naiive way of determining who is ahead
 function countPoints (fen) {
-  pieces = fen.split(' ')[0]
+  var pieces = fen.split(' ')[0]
   var symbols = [
     { // Pawn
       w: /P/g,
@@ -84,20 +81,20 @@ var evaluate = function (chess) {
     b: 0,
     w: 0
   }
-  for (var i = 0; i < 100; i++) {
+  for (var i = 0; i < 30; i++) {
     chess.load(startFen)
     while (!chess.game_over() && chess.history().length < 10) {
       var moves = chess.moves({verbose: true})
       chess.move(pickMove(moves))
     }
-    var last_turn = chess.turn()
+    var lastTurn = chess.turn()
     if (chess.game_over()) {
       if (!chess.in_checkmate() && !chess.in_draw()) {
-        evaluation[last_turn] += 1
+        evaluation[lastTurn] += 1
       } else if (chess.in_draw()) {
         continue
       } else {
-        evaluation[last_turn] -= 1
+        evaluation[lastTurn] -= 1
       }
     } else {
       if (countPoints(chess.fen()) > 0) {
@@ -107,7 +104,7 @@ var evaluate = function (chess) {
       }
     }
   }
-  return evaluation
+  return evaluation.w - evaluation.b
 }
 
 module.exports = {

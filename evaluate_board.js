@@ -46,18 +46,43 @@ function countPoints (fen) {
   return points
 }
 
+function filterMoves (moves) {
+  var sorted = []
+  var secondaryMoves = []
+  for (var i = 0; i < moves.length; i++) {
+    if (moves[i].san.slice(-1) === '#') {
+      // if you can checkmate, there might as well only be one move. ALWAYS DO IT.
+      return [moves[i]]
+    } else if (moves[i].san.slice(-1) === '+') {
+      // look at checks next, since they might be a string of checks to a mate
+      sorted.unshift(moves[i])
+    } else if (moves[i].captured) {
+      // then inspect captures
+      sorted.push(moves[i])
+    } else if (moves[i].piece === 'k') {
+      // look at king moves last -> The move selection was biased towards moving the king
+      // because it favors center moves, and the king is in the center
+      secondaryMoves.push(moves[i])
+    } else if (moves[i].to.indexOf('c') + moves[i].to.indexOf('d') + moves[i].to.indexOf('e') + moves[i].to.indexOf('f') > -4){
+      // then look at moves that challenge the center
+      secondaryMoves.unshift(moves[i])
+    } else {
+      // then look at other moves
+      secondaryMoves.push(moves[i])
+    }
+  }
+
+  return sorted.concat(secondaryMoves).slice(0, 15)
+}
+
 // pick a move. Usually random, but not if its a checkmate, or a piece upgrade
 function pickMove (moves) {
+  moves = filterMoves(moves)
   var bestMove = {
     value: -5,
     move: ''
   }
   for (var i = 0; i < moves.length; i++) {
-    if (moves[i].san.slice(-1) === '#') {
-      // checkmate
-      return moves[i].san
-    }
-
     if (moves[i].captured) {
       // captured a piece, is it an upgrade?
       var value = VALUES[moves[i].captured] - VALUES[moves[i].piece]
@@ -108,5 +133,6 @@ var evaluate = function (chess) {
 }
 
 module.exports = {
-  evaluate: evaluate
+  evaluate: evaluate,
+  filterMoves: filterMoves
 }

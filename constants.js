@@ -7,8 +7,8 @@ module.exports = {
     r: 5, // rook
     q: 9, // queen
   },
-  mmDepth: 3, // depth for minimax search
-  moveEvalNum: 10, // number of moves to look at
-  simGameNum: 5, // number of games to simulate in each evaluation,
-  randomGameDepth: 7, // number of moves to simulate for each game during evaluation
+  mmDepth: 2, // depth for minimax search
+  moveEvalNum: 25, // number of moves to look at
+  simGameNum: 10, // number of games to simulate in each evaluation,
+  randomGameDepth: 5, // number of moves to simulate for each game during evaluation
 }

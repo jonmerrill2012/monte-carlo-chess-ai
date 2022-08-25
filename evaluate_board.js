@@ -41,33 +41,38 @@ function countPoints (fen) {
 }
 
 function filterMoves (moves) {
+  var shuffledMoves = moves.map(move => ({ move, key: Math.random() }))
+    .sort((a, b) => a.key - b.key )
+    .map(({ move }) => move)
+
   var sorted = []
   var secondaryMoves = []
-  for (var i = 0; i < moves.length; i++) {
-    if (moves[i].san.slice(-1) === '#') {
+
+  for (var i = 0; i < shuffledMoves.length; i++) {
+    if (shuffledMoves[i].san.slice(-1) === '#') {
       // if you can checkmate, there might as well only be one move. ALWAYS DO IT.
-      return [moves[i]]
-    } else if (moves[i].san.includes('=')) {
+      return [shuffledMoves[i]]
+    } else if (shuffledMoves[i].san.includes('=')) {
       // skip promotions that aren't queen promotions. Otherwise, look at them.
-      if (moves[i].san.includes('=Q')) {
-        sorted.unshift(moves[i])
+      if (shuffledMoves[i].san.includes('=Q')) {
+        sorted.unshift(shuffledMoves[i])
       }
-    } else if (moves[i].san.slice(-1) === '+') {
+    } else if (shuffledMoves[i].san.slice(-1) === '+') {
       // look at checks next, since they might be a string of checks to a mate
-      sorted.unshift(moves[i])
-    } else if (moves[i].captured) {
+      sorted.unshift(shuffledMoves[i])
+    } else if (shuffledMoves[i].captured) {
       // then inspect captures
-      sorted.push(moves[i])
-    } else if (moves[i].piece === 'k') {
+      sorted.push(shuffledMoves[i])
+    } else if (shuffledMoves[i].piece === 'k') {
       // look at king moves last -> The move selection was biased towards moving the king
       // because it favors center moves, and the king is in the center
-      secondaryMoves.push(moves[i])
-    } else if (moves[i].to.indexOf('c') + moves[i].to.indexOf('d') + moves[i].to.indexOf('e') + moves[i].to.indexOf('f') > -4){
+      secondaryMoves.push(shuffledMoves[i])
+    } else if (shuffledMoves[i].to.indexOf('c') + shuffledMoves[i].to.indexOf('d') + shuffledMoves[i].to.indexOf('e') + shuffledMoves[i].to.indexOf('f') > -4){
       // then look at moves that challenge the center
-      secondaryMoves.unshift(moves[i])
+      secondaryMoves.unshift(shuffledMoves[i])
     } else {
       // then look at other moves
-      secondaryMoves.push(moves[i])
+      secondaryMoves.push(shuffledMoves[i])
     }
   }
 
@@ -83,7 +88,7 @@ function pickMove (moves) {
   }
   for (var i = 0; i < moves.length; i++) {
     if (moves[i].captured) {
-      // captured a piece, is it an upgrade?
+      // captured a piece, is it a trade or better?
       var value = constants.values[moves[i].captured] - constants.values[moves[i].piece]
       if (value > bestMove.value) {
         bestMove.value = value
@@ -137,28 +142,36 @@ var searchTreeForBestMove = function (chess, fen, depth) {
 
   for (var i = 0; i < moves.length; i++) {
     if (depth == constants.mmDepth) {
-      console.log(`${i + 1}/${moves.length}: ${moves[i].san}`)
+      console.log(`\n${i + 1}/${moves.length}: ${moves[i].san}`)
     }
     var newValue
+    var moveScore
     chess.load(fen)
     if (chess.turn() === 'w') {
       chess.move(moves[i])
-      newValue = Math.max(value, searchTreeForBestMove(chess, chess.fen(), depth - 1))
+      moveScore = searchTreeForBestMove(chess, chess.fen(), depth - 1)
+
+      newValue = Math.max(value, moveScore)
     } else {
       chess.move(moves[i])
-      newValue = Math.min(value, searchTreeForBestMove(chess, chess.fen(), depth - 1))
+      moveScore = searchTreeForBestMove(chess, chess.fen(), depth - 1)
+
+      newValue = Math.min(value, moveScore)
+    }
+
+    if (depth == constants.mmDepth) {
+      console.log('score: ', moveScore)
     }
 
     if (newValue !== value) {
-      if (depth == constants.mmDepth) {
-        console.log('***new best move:', moves[i].san, newValue)
-      }
       bestMove = moves[i].san
     }
     value = newValue
   }
+
   if (depth === constants.mmDepth) {
-    console.log('*************FINAL MOVE: **********', bestMove)
+    console.log('\n\nBEST MOVE: ', bestMove)
+    console.log('SCORE: ', value)
   }
   return value
 }
